@@ -7,21 +7,25 @@ const app = express();
 const server = http.createServer(http);
 const PORT = 3000;
 
+import cors from "cors";
+
+app.use(cors());
+
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: "http://localhost:5173",
   },
 });
 
 const user_manager = new UserManager();
 
-io.on("connection", (socket: Socket) => {
+io.on('connection', (socket: Socket) => {
   console.log("A user connected");
-  user_manager.addUser("arjunn", socket);
-  socket.on("disconnect", () => {
-    console.log("A user disconnected");
-    user_manager.removeUser(socket.id);
-  });
+  // user_manager.addUser("arjunn", socket);
+  // socket.on("disconnect", () => {
+  //   console.log("A user disconnected");
+  //   user_manager.removeUser(socket.id);
+  // });
 });
 
 app.get("/", (req, res) => {
