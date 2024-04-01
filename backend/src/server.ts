@@ -14,7 +14,6 @@ const io = new Server(server, {
 });
 
 const user_manager = new UserManager();
-
 io.on("connection", (socket: Socket) => {
   console.log("A user connected");
   user_manager.addUser("arjunn", socket);

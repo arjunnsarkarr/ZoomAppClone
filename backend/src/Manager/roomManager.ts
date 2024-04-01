@@ -1,6 +1,6 @@
 import { User } from "./userManager";
 
-let global_id = 0;
+let global_id = 1;
 
 interface Room {
   user1: User;
@@ -9,32 +9,66 @@ interface Room {
 
 export class RoomManager {
   private rooms: Map<string, Room>;
+
   constructor() {
     this.rooms = new Map<string, Room>();
   }
 
   createRoom(user1: User, user2: User) {
-    const roomId = this.generate();
-    this.rooms.set(roomId.toString(), { user1, user2 });
-    user1.socket.emit("send-new-room", {
+    const roomId = this.generate().toString();
+    this.rooms.set(roomId.toString(), {
+      user1,
+      user2,
+    });
+
+    user1.socket.emit("send-offer", {
+      roomId,
+    });
+    user2.socket.emit("send-offer", {
       roomId,
     });
   }
 
-  onOffer(roomId: string, sdp: string) {
-    const user2 = this.rooms.get(roomId)?.user2;
-    user2?.socket.emit("offer", {
+  onOffer(roomId: string, sdp: string, senderSocketId: string) {
+    const room = this.rooms.get(roomId);
+    if (!room) {
+      return;
+    }
+    const userr = room.user1.socket.id === senderSocketId ? room.user2 : room.user1;
+    userr?.socket.emit("offer", {
       sdp,
-      roomId
+      roomId,
     });
   }
-  onAnswer(roomId: string, sdp: string) {
-    const user1 = this.rooms.get(roomId)?.user1;
-    user1?.socket.emit("answer", {
+
+  onAnswer(roomId: string, sdp: string ,senderSocketId :string) {
+    const room = this.rooms.get(roomId);
+    if (!room) {
+      return;
+    }
+    const userr = room.user1.socket.id === senderSocketId ? room.user2 : room.user1;
+    userr?.socket.emit("answer", {
       sdp,
-      roomId
+      roomId,
     });
   }
+
+
+  onIceCandidate(roomId :string , senderSocketId : string , candidate :string , type : "sender" | "reciever" ){
+    const room = this.rooms.get(roomId);
+    if (!room) {
+      return;
+    }
+    const userr = room.user1.socket.id === senderSocketId ? room.user2 : room.user1;
+    userr?.socket.emit("add-ice-candidate", {
+      candidate,
+      type,
+    });
+  }
+
+
+
+
 
   generate() {
     return global_id++;
